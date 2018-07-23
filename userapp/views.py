@@ -4,7 +4,6 @@ from userapp.models import User
 from userapp import session_scope
 
 
-
 def login(postvars=None, method='GET'):
     if method=='POST':
         username = postvars.get(b'username')[0].decode("utf-8")
@@ -14,13 +13,13 @@ def login(postvars=None, method='GET'):
             user = session.query(User).filter_by(username=username).first()
             session.commit()
             if user and user.password == password:
-                return (301, '/list')
+                return (301, '/list', True)
             else:
                 template = settings.template_env.get_template('login.html')
-                return (200, template.render(error_message=True))
+                return (200, template.render(error_message=True), False)
 
     template = settings.template_env.get_template('login.html')
-    return (200, template.render())
+    return (200, template.render(), False)
 
 
 def register(postvars=None, method='GET'):
@@ -37,10 +36,10 @@ def register(postvars=None, method='GET'):
                 user = User(username=username, email=email, password=password, country=country, active=True)
                 session.add(user)
                 session.commit()
-        return (301, '/list')
+        return (301, '/list', False)
 
     template = settings.template_env.get_template('register.html')
-    return (200, template.render())
+    return (200, template.render(), False)
 
 
 def user_list():
@@ -48,8 +47,8 @@ def user_list():
         users = session.query(User).all()
         session.commit()
         template = settings.template_env.get_template('list.html')
-        return (200, template.render(users=users))
+        return (200, template.render(users=users), False)
 
 
 def logout():
-    return (301, '/')
+    return (301, '/', True)
