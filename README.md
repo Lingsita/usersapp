@@ -2,6 +2,8 @@
 
 Install dependencies 
 
+Python 3
+
 with pip:
 pip install -r requirements.txt
 
