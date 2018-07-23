@@ -15,10 +15,10 @@ def run(port=8000):
     try:
         with socketserver.TCPServer(("", port), Handler) as httpd:
             set_urls(httpd.RequestHandlerClass, CUSTOM_MODULES)
+
             print("serving at port", port)
             httpd.serve_forever()
-    except Exception as e:
-        print(e)
+    except:
         print("Shutting down...")
         httpd.socket.close()
 

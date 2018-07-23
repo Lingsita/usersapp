@@ -1,5 +1,8 @@
-from http.server import SimpleHTTPRequestHandler
 import re
+import cgi
+import base64
+from urllib.parse import parse_qs
+from http.server import CGIHTTPRequestHandler
 
 
 class Router:
@@ -9,17 +12,16 @@ class Router:
 
     def register(self, regexp, controller):
         self.__routes.append({'regexp': regexp, 'controller': controller})
-        print(self.__routes)
 
-    def route(self, request, path):
+    def route(self, path, *args, **kwargs):
         for route in self.__routes:
             if re.search(r'^'+route['regexp']+'$', path):
                 func = route['controller']
-                return func(request)
+                return func(*args, **kwargs)
         return 404
 
 
-class RequestHandler(SimpleHTTPRequestHandler):
+class RequestHandler(CGIHTTPRequestHandler):
     '''
     Handler for HTTP Requests, search for routes and redirect
     '''
@@ -34,29 +36,64 @@ class RequestHandler(SimpleHTTPRequestHandler):
         return cls.__router
 
     def do_GET(self):
-        print(self.path)
-        route_response = self.__router.route(self.request, self.path)
-        if not route_response == 404:
-            self.send_response(200)
+        status_code, route_response = self.__router.route(self.path)
+        if status_code == 404:
+            self.send_response(status_code)
+            self.end_headers()
+        elif status_code == 301:
+            self.send_response(status_code)
+            new_path = (route_response)
+            self.send_header('Location', new_path)
+            self.end_headers()
+        else:
+            self.send_response(status_code)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write(bytes('Hello world', encoding='utf-8'))
-        else:
-            self.send_response(404)
-            self.end_headers()
+            self.wfile.write(bytes(route_response, encoding='utf-8'))
 
 
     def do_POST(self):
-        request_path = self.path
-
         request_headers = self.headers
-        content_length = request_headers.getheaders('content-length')
-        length = int(content_length[0]) if content_length else 0
+        ctype, pdict = cgi.parse_header(self.headers['content-type'])
+        if ctype == 'application/x-www-form-urlencoded':
+            length = int(self.headers['content-length'])
+            postvars = parse_qs(self.rfile.read(length), keep_blank_values=1)
+        else:
+            postvars = {}
 
-        print(self.rfile.read(length))
+        status_code, route_response = self.__router.route(self.path, postvars=postvars, method='POST')
 
-        self.send_response(200)
+        if status_code == 404:
+            self.send_response(status_code)
+            self.end_headers()
+        elif status_code == 301:
+            self.send_response(status_code)
+            new_path = (route_response)
+            self.send_header('Location', new_path)
+            self.end_headers()
+        else:
+            self.send_response(status_code)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(bytes(route_response, encoding='utf-8'))
 
+    def do_AUTHHEAD(self):
+        self.send_response(401)
+        self.send_header('WWW-Authenticate', 'Basic realm=\"Test\"')
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
 
+    @staticmethod
+    def generate_key(username, password):
+        return base64.b64encode('%s:%s' % (username, password))
 
+    def is_authenticated(self):
+        auth_header = self.headers.get('Authorization')
+        return auth_header and auth_header == 'Basic ' + self.generate_key()
 
+    def try_authenticate(self):
+        if not self.is_authenticated():
+            self.do_AUTHHEAD()
+            self.wfile.write('not authenticated')
+            return False
+        return True

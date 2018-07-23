@@ -1,0 +1,1 @@
+from userapp.context_manager import session_scope

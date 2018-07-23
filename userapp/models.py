@@ -9,9 +9,9 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'user'
     
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(250), nullable=False)
-    name = Column(String(250), nullable=False)
+    name = Column(String(250), nullable=True)
     email = Column(String(250), nullable=False)
     country = Column(String(250), nullable=False)
     password = Column(PasswordType(
@@ -25,8 +25,7 @@ class User(Base):
     active = Column(String(250), nullable=False)
     last_login = Column(String(250), nullable=True)
  
- 
 # Create an engine that stores data in users.db file.
-engine = create_engine('sqlite:///users.db')
+engine = create_engine('sqlite:///users.db', echo=True)
  
 Base.metadata.create_all(engine)

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Sign In Form{% endblock %}
+{% block content %}
+<div class="col-md-4 offset-md-4">
+    <h2>Sign In</h2>
+    {% if success_message %}
+    <div class="alert alert-success"> User successfully created. Please do login <a href="/">here</a></div>
+    {% endif %}
+    <form class="form-group" action="/register" method="post">
+        Username:<br>
+        <input class="form-control" type="text" name="username" required>
+        <br>
+        Email name:<br>
+        <input class="form-control" name="email" required>
+        <br>
+        Password:<br>
+        <input class="form-control" type="password" name="password" pattern="(?=.*\d)[A-Za-z\d]{6,}" required>
+        <br>
+        <label>Country</label>
+        <input class="form-control" id="country" name="country" />
+        <br>
+        <br>
+        <button class="form-control btn btn-success" type="submit" value="Submit">Submit</button>
+
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(function () {
+        $( "#country" ).autocomplete({
+            source: function( request, response ) {
+                $.ajax( {
+                    url: "https://pkgstore.datahub.io/core/country-list/data_json/data/8c458f2d15d9f2119654b29ede6e45b8/data_json.json",
+                    dataType: "json",
+                    data: {
+                        term: request.term
+                    },
+                    success: function( data ) {
+                        console.log(data)
+                        response( data );
+                    }
+                } );
+            },
+            minLength: 2,
+        } );
+    });
+</script>
+{% endblock %}

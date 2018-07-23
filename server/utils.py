@@ -14,15 +14,5 @@ def set_urls(handler, modules):
             pass
 
 
-def redirect():
-    '''
-        self.send_response(301)
-        new_path = '%s%s' % ('http://newserver.com', self.path)
-        self.send_header('Location', new_path)
-        self.end_headers()
-    '''
-    pass
-
-
 def render():
     return

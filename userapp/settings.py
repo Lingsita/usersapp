@@ -11,5 +11,5 @@ CUSTOM_MODULES = [
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # jinja2 environment.
-j2_env = Environment(loader=FileSystemLoader(ROOT_DIR),
+template_env = Environment(loader=FileSystemLoader(os.path.join(ROOT_DIR, 'templates')),
                      trim_blocks=True)
