@@ -15,7 +15,6 @@ class Router:
         self.__routes.append({'regexp': regexp, 'controller': controller})
 
     def route(self, path, *args, **kwargs):
-        print(path)
         for route in self.__routes:
             if re.search(r'^'+route['regexp']+'$', path):
                 func = route['controller']
@@ -38,7 +37,6 @@ class RequestHandler(CGIHTTPRequestHandler):
         return cls.__router
 
     def do_GET(self):
-        print(self.headers.get('Cookie'))
         (status_code, route_response, do_logout) = self.__router.route(self.path)
         if status_code == 404:
             self.send_response(status_code)
@@ -47,7 +45,6 @@ class RequestHandler(CGIHTTPRequestHandler):
             self.send_response(status_code)
             if do_logout:
                 self.set_cookie()
-                print('logout')
             self.send_header('Location', route_response)
             self.end_headers()
         else:
