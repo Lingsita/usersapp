@@ -3,6 +3,8 @@ import socketserver
 import argparse
 
 from server import RequestHandler
+from server.utils import set_urls
+from userapp.settings import CUSTOM_MODULES
 
 DEFAULT_PORT = 8000
 
@@ -12,9 +14,11 @@ Handler = RequestHandler
 def run(port=8000):
     try:
         with socketserver.TCPServer(("", port), Handler) as httpd:
+            set_urls(httpd.RequestHandlerClass, CUSTOM_MODULES)
             print("serving at port", port)
             httpd.serve_forever()
-    except:
+    except Exception as e:
+        print(e)
         print("Shutting down...")
         httpd.socket.close()
 

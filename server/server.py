@@ -2,13 +2,36 @@ from http.server import SimpleHTTPRequestHandler
 import re
 
 
+class Router:
+
+    def __init__(self):
+        self.__routes = []
+
+    def register(self, regexp, controller):
+        self.__routes.append({'regexp': regexp, 'controller': controller})
+        print(self.__routes)
+
+    def route(self, request, path):
+        for route in self.__routes:
+            if re.search(r'^'+route['regexp']+'$', path):
+                func = route['controller']
+                return func(request)
+        return 404
+
+
 class RequestHandler(SimpleHTTPRequestHandler):
+    '''
+    Handler for HTTP Requests, search for routes and redirect
+    '''
+    __router = Router()
 
     def __init__(self, request, client_address, server):
 
-        self.__router = Router(self)
-
         super(RequestHandler, self).__init__(request, client_address, server)
+
+    @classmethod
+    def get_router(cls):
+        return cls.__router
 
     def do_GET(self):
         print(self.path)
@@ -19,8 +42,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(bytes('Hello world', encoding='utf-8'))
         else:
-            self.__server.send_response(404)
-            self.__server.end_headers()
+            self.send_response(404)
+            self.end_headers()
 
 
     def do_POST(self):
@@ -35,24 +58,5 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
 
 
-class BaseRouter(object):
-
-    def __init__(self, server):
-        self.__routes = []
-
-    def register(self, regexp, controller, name):
-        self.__routes.append({'regexp': regexp, 'controller': controller, 'name': name})
-
-    def route(self, request, path):
-        for route in self.__routes:
-            if re.search(route['regexp'], path):
-                cls = globals()[route['controller']]
-                func = cls.__dict__[route['controller']]
-                func(request)
-                return
-        return "404"
 
 
-class Router(object):
-    def register(self, regexp, controller, name):
-        super(Router, self).register( regexp, controller, name)
